@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>courses</title>
+    <!-- <link href="https://kendo.cdn.telerik.com/themes/7.2.0/default/default-main.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    
+    <script src="js/kendo.all.min.js"></script> -->
+    <link href="css/coursesStyle.css" rel="stylesheet" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-6">
+                <h1>Courses</h1>
+            </div>
+
+            <div class="col-2">
+                <a href="students.html" class="badge badge-primary">Students</a>
+            </div>
+        </div>
+
+        <div class="row">
+            <form class="form-inline">
+                <label class="sr-only" for="inlineFormInputName2">Name</label>
+                <input type="text" class="form-control mb-2 mr-sm-2" name="name" id="inlineFormInputName2"
+                    placeholder="Name">
+
+                <label class="sr-only" for="inlineFormInputGroupUsername2">Description</label>
+                <input type="text" class="form-control mb-2 mr-sm-2" name="description"
+                    id="inlineFormInputGroupUsername2" placeholder="Description">
+
+                <button type="submit" class="btn btn-primary mb-2">Add Course</button>
+            </form>
+        </div>
+
+        <div id="myModal" class="modal container" data-courseUpdateId="">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+
+                <h2 class="row">Update Course</h2>
+                <div class="row">
+                    <form class="form">
+                        <label class="sr-only" for="name">Name</label>
+                        <input type="text" class="form-control mb-2 mr-sm-2" name="name" id="name" placeholder="Name">
+
+                        <label class="sr-only" for="description">Description</label>
+                        <input type="text" class="form-control mb-2 mr-sm-2" name="description" id="description"
+                            placeholder="Description">
+
+                        <button id="okButton" type="submit" class="btn btn-success">Update Course</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+
+        <table class="table">
+
+            <thead class="thead-dark">
+                <td>name</td>
+                <td>description</td>
+                <td>options</td>
+            </thead>
+
+            <tbody>
+
+            </tbody>
+        </table>
+    </div>
+
+
+    <script>
+        fetch('http://localhost:8080/api/course/all')
+            .then(res => {
+                return res.json();
+            })
+            .then(data => {
+                console.log(data);
+
+                data.forEach(course => {
+                    const markup = "<tr> <td> "
+                        + course.name +
+                        " </td> <td>"
+                        + course.description +
+                        " </td> <td>"
+                        + "<button id= " + course.id + " class=\"btn btn-warning updateCourse\">Update</button>"
+                        + "<button id=" + course.id + " class=\"btn btn-danger deleteCourse\">Delete</button>"
+
+                    " </td> </tr>";
+                    document.querySelector('tbody').insertAdjacentHTML('beforeend', markup);
+
+                });
+
+
+                const updateCourseButtons = document.querySelectorAll(".updateCourse");
+                console.log(updateCourseButtons);
+
+                const modal = document.getElementById('myModal');
+                const closeSpan = document.getElementsByClassName("close")[0];
+                const okButton = document.getElementById('okButton');
+
+                const updateCourseForm = document.querySelector('.form');
+
+
+                updateCourseButtons.forEach((button) => {
+                    button.addEventListener('click', event => {
+                        event.preventDefault();
+                        modal.style.display = "block";
+                        // updateStudentId = button.id;
+                        modal.courseUpdateId = button.id;
+                    })
+                });
+
+                closeSpan.addEventListener('click', () => {
+                    modal.style.display = "none";
+                });
+
+                okButton.addEventListener('click', event => {
+                    event.preventDefault();
+                    const formData = new FormData(updateCourseForm);
+                    const data = Object.fromEntries(formData)
+
+                    console.log(data);
+
+                    const updateCourseId = modal.courseUpdateId;
+                    console.log(updateCourseId);
+
+                    // data.id = updateStudentId;
+                    // console.log(data);
+
+                    datajson = JSON.stringify(data);
+
+                    console.log(datajson);
+
+                    const updateUrl = 'http://localhost:8080/api/course/update/' + updateCourseId;
+
+                    console.log(updateUrl);
+
+                    fetch(updateUrl, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: datajson
+                    })
+                        .then(res => {
+                            if (res.status = 200) {
+                                window.location.reload();
+                            } else {
+                                alert("cannot add!");
+                            }
+                        })
+                        .catch(error => console.log(error.statusText));
+
+
+
+
+                });
+
+                window.addEventListener('click', (event) => {
+                    if (event.target === modal) {
+                        modal.style.display = "none";
+                    }
+                });
+
+
+
+                const deleteCourseButttons = document.querySelectorAll(".deleteCourse");
+                console.log(deleteCourseButttons);
+
+                deleteCourseButttons.forEach((button) => {
+                    button.addEventListener('click', event => {
+                        event.preventDefault();
+                        // console.log(button.id);
+                        const courseId = button.id;
+
+                        const deleteUrl = 'http://localhost:8080/api/course/delete/' + courseId;
+                        fetch(deleteUrl, {
+                            method: 'DELETE'
+                        })
+                            .then(res => {
+                                if (res.status = 200) {
+                                    window.location.reload();
+                                } else {
+                                    alert("cannot add!");
+                                }
+                            })
+                            // .then(window.location.reload())
+                            .catch(error => console.log(error))
+
+                    })
+                })
+            })
+            .catch(error => {
+                console.log(error);
+            })
+
+        const addCourseForm = document.querySelector('.form-inline');
+
+        addCourseForm.addEventListener('submit', event => {
+            event.preventDefault();
+
+            const formData = new FormData(addCourseForm);
+            const data = Object.fromEntries(formData)
+            console.log(data);
+
+
+
+
+            fetch('http://localhost:8080/api/course/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+                .then(res => {
+                    if (res.status = 200) {
+                        window.location.reload();
+                    } else {
+                        alert("cannot add!");
+                    }
+                })
+                // .then(window.location.reload())
+                .then(data => console.log(data))
+                .catch(error => console.log(error));
+
+
+        })
+    </script>
+
+
+
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>
